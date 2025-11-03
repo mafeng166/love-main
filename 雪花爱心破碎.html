@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>爱心~</title>
+    <style>
+        :root{ --glow-r1:10px; --glow-r2:22px; }
+        html,body{
+            height:100%;margin:0;overflow:hidden;
+            font-family:"微软雅黑",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+            transition:background 1s;
+            background:
+                radial-gradient(1200px 600px at 50% 45%, rgba(255,255,255,.65), rgba(255,255,255,0) 60%),
+                radial-gradient(circle at 50% 45%, #fff4f7 0%, #c9eaff 100%);
+        }
+        body.dark{
+            background:
+                radial-gradient(1200px 600px at 50% 45%, rgba(18,18,18,.8), rgba(0,0,0,0) 60%),
+                radial-gradient(circle at 50% 45%, #121212 0%, #000000 100%);
+            color:#eee;
+        }
+        body.dark.eco{ --glow-r1:6px; --glow-r2:14px; }
+
+        .stage{position:relative;width:100%;height:100%;}
+
+        .msg{
+            position:absolute;left:50%;top:50%;
+            padding:10px 16px;border-radius:16px;
+            color:#fff;font-weight:700;
+            font-size:clamp(14px,3vmin,22px);
+            text-shadow:0 2px 8px rgba(0,0,0,.28);
+            opacity:0;
+            transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(.75) rotate(var(--rot));
+            animation: flight var(--dur) cubic-bezier(.25,.7,.3,1) var(--delay) both;
+            box-shadow:0 8px 26px rgba(0,0,0,.22);
+            will-change: transform, opacity;
+            background: var(--bg);
+        }
+        body.dark .msg{
+            box-shadow:none;
+            filter: drop-shadow(0 0 var(--glow-r1) var(--glow1, rgba(0,0,0,0)))
+                    drop-shadow(0 0 var(--glow-r2) var(--glow2, rgba(0,0,0,0)));
+        }
+
+        @keyframes flight{
+            0%{
+                opacity:0;
+                transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(.75) rotate(var(--rot));
+            }
+            18%{ opacity:1; }
+            45%{
+                transform:translate(-50%,-50%) translate(calc(var(--dx)*.2),calc(var(--dy)*.2)) scale(1.06);
+            }
+            70%{
+                transform:translate(-50%,-50%) translate(calc(var(--dx)*1.15),calc(var(--dy)*1.15)) scale(.95) rotate(var(--rot));
+            }
+            88%{
+                transform:translate(-50%,-50%) translate(calc(var(--heart-x)*.6),calc(var(--heart-y)*.6)) scale(.9) rotate(var(--heart-rot));
+            }
+            100%{
+                opacity:1;
+                transform:translate(-50%,-50%) translate(var(--heart-x),var(--heart-y)) scale(1) rotate(var(--heart-rot));
+            }
+        }
+
+        .msg::before,.msg::after{
+            content:''; position:absolute; left:50%; top:0;
+            background:inherit;
+            border-radius:50px 50px 0 0;
+            width:22px; height:34px; opacity:0;
+            transition:opacity .28s ease;
+            transform-origin:0 100%; transform:rotate(-45deg); z-index:0;
+        }
+        .msg::after{
+            left:0; transform-origin:100% 100%; transform:rotate(45deg);
+        }
+        .msg.heart-mode{ color:#fff; }
+        .msg .text{ position:relative; z-index:1; }
+        .msg.heart-mode::before,.msg.heart-mode::after{ opacity:1; }
+
+        .msg.locked{
+            animation:none;
+            transform:translate(-50%,-50%) translate(var(--heart-x),var(--heart-y)) scale(1) rotate(var(--heart-rot));
+            opacity:1;
+        }
+        .msg.locked.pulse{ animation:pulse 2.2s ease-in-out 1; }
+        .msg.locked::before,.msg.locked::after{ display:none; }
+        body.dark .msg.locked{ filter:none; }
+        .msg.locked .text{ text-shadow:0 1px 2px rgba(0,0,0,.12); }
+
+        @keyframes pulse{
+            0%,100%{ transform:translate(-50%,-50%) translate(var(--heart-x),var(--heart-y)) scale(1); }
+            50%   { transform:translate(-50%,-50%) translate(var(--heart-x),var(--heart-y)) scale(1.08); }
+        }
+
+        /* 爆炸动画（核心破碎效果） */
+        .msg.burst{ animation: burst 1.4s cubic-bezier(.17,.6,.2,1) forwards; }
+        @keyframes burst{
+            0%{ opacity:1; transform:translate(-50%,-50%) translate(var(--heart-x),var(--heart-y)) scale(1); filter:blur(0); }
+            70%{ opacity:.9; transform:translate(-50%,-50%) translate(calc(var(--heart-x) + var(--bx)*0.7), calc(var(--heart-y) + var(--by)*0.7)) scale(.9) rotate(var(--rot)); filter:blur(.3px); }
+            100%{ opacity:0; transform:translate(-50%,-50%) translate(calc(var(--heart-x) + var(--bx)), calc(var(--heart-y) + var(--by))) scale(.7) rotate(var(--rot)); filter:blur(1px); }
+        }
+
+        .center-title{
+            position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+            font-weight:800; letter-spacing:.12em;
+            font-size:clamp(18px,4vmin,28px);
+            color:rgba(255,105,180,.7); text-shadow:0 2px 10px rgba(255,105,180,.18);
+            opacity:.0; pointer-events:none;
+            animation:titleIn 1.2s ease 0.8s both;
+        }
+        body.dark .center-title{ color:rgba(255,160,200,.9); text-shadow:0 0 18px rgba(255,130,200,.35); }
+        @keyframes titleIn{ from{opacity:0; transform:translate(-50%,-55%);} to{opacity:.95; transform:translate(-50%,-50%);} }
+
+        .controls{ position:absolute; right:18px; bottom:18px; display:flex; gap:12px; align-items:center; }
+        .btn{
+            padding:10px 14px; border:none; border-radius:10px;
+            background:rgba(255,255,255,.5); backdrop-filter:blur(8px);
+            color:#222; font-weight:600; cursor:pointer;
+            box-shadow:0 5px 20px rgba(0,0,0,.22);
+        }
+        body.dark .btn{ background:rgba(255,255,255,.15); color:#fff; }
+
+        .snow{
+            position:fixed; top:-10px; color:white;
+            user-select:none; pointer-events:none;
+            z-index:99; text-shadow:0 0 8px rgba(255,255,255,.8);
+            animation:snowfall linear forwards;
+        }
+        @keyframes snowfall{ 0%{ transform:translateY(0) rotate(0deg); opacity:1;} 100%{ transform:translateY(100vh) rotate(360deg); opacity:0;} }
+
+        #bgMusic { display: none; }
+    </style>
+</head>
+<body>
+    <div class="stage" id="stage">
+        <div class="center-title" id="title">for you ♥</div>
+    </div>
+    <div class="controls">
+        <button class="btn" id="replay">重放 / 切换背景</button>
+    </div>
+    
+    <audio id="bgMusic" loop>
+        <source src="https://lf26-music-east.douyinstatic.com/obj/ies-music-hj/7495920705440140091.mp3" type="audio/mpeg">
+        <source src="https://lf26-music-east.douyinstatic.com/obj/ies-music-hj/7495920705440140091.mp3" type="audio/ogg">
+    </audio>
+
+<script>
+const tips=[
+    '想念在风里飘','月亮为你亮','喜欢你很久了','你是我的心动','温柔落在人间',
+    '星光都为你闪','梦里有你真好','世界因你柔软','心跳为你加速','有你真好',
+    '你是独一无二的光','遇见你是浪漫的开始','晚风也温柔了','你的笑融化星海',
+    '想陪你看星星','今夜的梦给你','宇宙都在偏爱你','你是人间的奇迹',
+    '拥抱要紧一点','想你成习惯了','一瞬也是永恒','你眼里有星星','你的温柔让我沦陷',
+    '风都是甜的','为你心动不止','想成为你的例外','心有桃花一片','你是我梦里的海',
+    '想和你看海','此刻的风想你','遇见你后时间变慢','所有浪漫都与你有关',
+    '想靠近你一点','你的名字是我心事','心软是因为你','想牵你的手看日落',
+    '每次想你星星都亮了','心跳藏不住','有你世界亮一点','甜在风里也在心里'
+];
+
+const stage  = document.getElementById('stage');
+const replay = document.getElementById('replay');
+const title  = document.getElementById('title');
+const bgMusic = document.getElementById('bgMusic');
+let dark = false;
+let eco = false;
+let snowRunning = false;
+let snowFrame;
+let lastSnowTime = 0;
+let snowIntervalMs = 700;
+let snowMax = 120;
+let totalCurrent = 0;
+let lockedCount = 0;
+
+const directions = [
+    {dx:'0vw',dy:'-80vh'},{dx:'0vw',dy:'80vh'},
+    {dx:'-80vw',dy:'0vh'},{dx:'80vw',dy:'0vh'},
+    {dx:'-70vw',dy:'-70vh'},{dx:'70vw',dy:'-70vh'},
+    {dx:'-70vw',dy:'70vh'},{dx:'70vw',dy:'70vh'},
+    {dx:'0vw',dy:'-60vh'},{dx:'0vw',dy:'60vh'},
+    {dx:'-60vw',dy:'0vh'},{dx:'60vw',dy:'0vh'}
+];
+
+function rand(min,max){return Math.random()*(max-min)+min;}
+
+function hexToRgba(hex,alpha=1){
+    const h=hex.replace('#','');
+    const short=h.length===3;
+    const r=parseInt(short? h[0]+h[0] : h.slice(0,2),16);
+    const g=parseInt(short? h[1]+h[1] : h.slice(2,4),16);
+    const b=parseInt(short? h[2]+h[2] : h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function randomStyle(){
+    const arr=[
+        ['#ff758c','#ff7eb3'], ['#a18cd1','#fbc2eb'],
+        ['#f6d365','#fda085'], ['#84fab0','#8fd3f4'],
+        ['#f093fb','#f5576c'], ['#4facfe','#00f2fe'],
+        ['#43e97b','#38f9d7'], ['#fa709a','#fee140'],
+        ['#30cfd0','#330867'], ['#5ee7df','#b490ca']
+    ];
+    const [c1,c2]=arr[Math.floor(Math.random()*arr.length)];
+    return {
+        bg:`linear-gradient(135deg,${c1},${c2})`,
+        glow1:hexToRgba(c1,0.55),
+        glow2:hexToRgba(c2,0.35)
+    };
+}
+
+function heartScale(){
+    const minDim = Math.min(window.innerWidth, window.innerHeight);
+    let s = Math.round(minDim * 0.023);
+    s = Math.max(8, Math.min(22, s));
+    if (dark && eco) s = Math.max(8, Math.floor(s * 0.92));
+    return s;
+}
+
+function centerYOffset(){
+    const portrait = window.innerHeight > window.innerWidth;
+    const minDim = Math.min(window.innerWidth, window.innerHeight);
+    return portrait ? -minDim * 0.06 : 0;
+}
+
+function heartXY(t){
+    const s = heartScale();
+    const x = s * (16 * Math.sin(t)**3);
+    const y = -s * (13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+    return {x: x+'px', y: (y + centerYOffset())+'px'};
+}
+
+function createMsg(i,total){
+    const el = document.createElement('div');
+    el.className = 'msg';
+
+    const d = directions[Math.floor(Math.random()*directions.length)];
+    el.style.setProperty('--dx', d.dx);
+    el.style.setProperty('--dy', d.dy);
+    el.style.setProperty('--rot', rand(-55,55)+'deg');
+
+    const baseDur = dark && eco ? rand(6.2,7.6) : rand(6.8,8.6);
+    el.style.setProperty('--dur', baseDur+'s');
+    el.style.setProperty('--delay', (i*0.11 + rand(0,0.35))+'s');
+    
+    const sty = randomStyle();
+    el.style.setProperty('--bg', sty.bg);
+    el.style.setProperty('--glow1', sty.glow1);
+    el.style.setProperty('--glow2', sty.glow2);
+
+    const t = (i / total) * Math.PI * 2;
+    const {x,y} = heartXY(t);
+    el.style.setProperty('--heart-x', x);
+    el.style.setProperty('--heart-y', y);
+    el.style.setProperty('--heart-rot', rand(-18,18)+'deg');
+
+    const span = document.createElement('span');
+    span.className = 'text';
+    span.textContent = tips[Math.floor(Math.random()*tips.length)];
+    el.appendChild(span);
+
+    const delay = parseFloat(el.style.getPropertyValue('--delay'));
+    const dur   = parseFloat(el.style.getPropertyValue('--dur'));
+    const switchAt = delay + dur * 0.86;
+    const switchTimer = setTimeout(()=>{ el.classList.add('heart-mode'); }, switchAt*1000);
+
+    el.addEventListener('animationend',()=>{
+        clearTimeout(switchTimer);
+        el.classList.add('heart-mode','locked','pulse');
+        el.style.willChange = 'auto';
+
+        const spread = rand(140, 260);
+        const ang    = rand(0, Math.PI*2);
+        const bx = Math.cos(ang)*spread;
+        const by = Math.sin(ang)*spread;
+        el.style.setProperty('--bx', bx+'px');
+        el.style.setProperty('--by', by+'px');
+
+        lockedCount++;
+        if(lockedCount===totalCurrent) onAllLocked();
+    }, {once:true});
+
+    stage.appendChild(el);
+}
+
+function finalBurst(){
+    stage.querySelectorAll('.msg.locked').forEach(el=>{
+        el.classList.remove('pulse');
+        const jitter = rand(0, 200);
+        setTimeout(()=> el.classList.add('burst'), jitter);
+        el.addEventListener('animationend',()=> el.remove(), {once:true});
+    });
+    title.style.opacity = 0;
+}
+
+function play(){
+    stage.querySelectorAll('.msg').forEach(n=>n.remove());
+    title.style.opacity = 0;
+
+    const minDim = Math.min(window.innerWidth, window.innerHeight);
+    let TOTAL;
+    if (minDim <= 420) {
+        TOTAL = dark ? (eco ? 80 : 110) : 150;
+    } else if (minDim <= 720) {
+        TOTAL = dark ? (eco ? 96 : 130) : 180;
+    } else {
+        TOTAL = dark ? (eco ? 96 : 140) : 200;
+    }
+    totalCurrent = TOTAL;
+    lockedCount = 0;
+    for(let i=0;i<TOTAL;i++) createMsg(i,TOTAL);
+
+    setTimeout(()=>{ title.style.opacity = 1; }, 1400);
+    playMusic();
+}
+
+function playMusic() {
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(error => {
+        console.log('音乐播放需要用户交互:', error);
+    });
+}
+
+function createSnow(){
+    const snow=document.createElement('div');
+    snow.className='snow';
+    snow.textContent='❄';
+    snow.style.left=(Math.random()*100)+'vw';
+    snow.style.fontSize=(Math.random()*12+8)+'px';
+    snow.style.opacity=(Math.random()*0.8+0.2);
+    const duration=(Math.random()*5+6);
+    snow.style.animationDuration=duration+'s';
+    document.body.appendChild(snow);
+    setTimeout(()=>snow.remove(),duration*1000);
+}
+
+function loopSnow(ts){
+    if(!lastSnowTime) lastSnowTime=ts;
+    const delta=ts-lastSnowTime;
+    if(delta>snowIntervalMs){
+        if(snowRunning){
+            const count = document.querySelectorAll('.snow').length;
+            if(count < snowMax) createSnow();
+        }
+        lastSnowTime=ts;
+    }
+    snowFrame=requestAnimationFrame(loopSnow);
+}
+
+function startSnow(){ snowRunning=true; lastSnowTime=0; loopSnow(); }
+function stopSnow(){ 
+    snowRunning=false; 
+    cancelAnimationFrame(snowFrame); 
+    document.querySelectorAll('.snow').forEach(s=>s.remove()); 
+}
+
+function decideEco(){
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4;
+    const area = window.innerWidth * window.innerHeight;
+    return (cores <= 4) || (mem <= 4) || (area >= 2400*1440);
+}
+
+function applyMode(){
+    document.body.classList.toggle('dark', dark);
+    if(dark){
+        eco = decideEco();
+        document.body.classList.toggle('eco', eco);
+        snowIntervalMs = eco ? 800 : 500;
+        snowMax = eco ? 100 : 180;
+        startSnow();
+    }else{
+        stopSnow();
+        document.body.classList.remove('eco');
+    }
+}
+
+/* 所有元素锁定后触发破碎效果（核心修改） */
+function onAllLocked(){
+    if(dark){
+        snowIntervalMs = eco ? 700 : 400;
+        snowMax = eco ? 140 : 240;
+    }
+
+    // 延迟2秒后破碎（可修改2000为其他毫秒数调整停留时间）
+    setTimeout(()=>{
+        finalBurst();
+    }, 2000);
+}
+
+// 初始播放
+play();
+
+// 重放按钮事件
+replay.onclick = ()=>{ 
+    dark = !dark; 
+    applyMode(); 
+    play(); 
+};
+
+// 窗口大小变化防抖重绘
+let resizeTimer;
+window.addEventListener('resize', ()=>{ 
+    clearTimeout(resizeTimer); 
+    resizeTimer = setTimeout(()=> play(), 150); 
+});
+
+// 首次点击触发音乐播放（解决浏览器限制）
+document.addEventListener('click', () => {
+    if (bgMusic.paused) {
+        playMusic();
+    }
+}, { once: true });
+</script>
+</body>
+</html>
