@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>心形文字与鲜花爆炸效果</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            love: {
+              light: '#FFB6C1',
+              DEFAULT: '#FF69B4',
+              dark: '#DB7093'
+            },
+            flower: {
+              pink: '#FFCAD4',
+              yellow: '#FFFACD',
+              purple: '#E6E6FA'
+            }
+          },
+          fontFamily: {
+            romantic: ['"Dancing Script"', 'cursive', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+      .petal {
+        position: absolute;
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0;
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+  
+  <!-- 引入浪漫风格字体 -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gradient-to-br from-pink-50 to-purple-50 min-h-screen overflow-hidden flex flex-col items-center justify-center">
+  <!-- 页面标题 -->
+  <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-romantic text-love-dark font-bold mb-8 text-shadow opacity-0 transition-opacity duration-1000" id="pageTitle">
+    
+  </h1>
+  
+  <!-- 主容器 -->
+  <div class="relative w-full h-[70vh] max-w-3xl mx-auto">
+    <!-- 心形将在这里由文字组成 -->
+    <div id="heartContainer" class="absolute inset-0"></div>
+    
+    <!-- 鲜花将在这里爆炸展示 -->
+    <div id="flowerContainer" class="absolute inset-0 pointer-events-none"></div>
+  </div>
+  
+  <!-- 控制按钮 -->
+  <button id="explodeBtn" class="mt-8 px-8 py-3 bg-love text-white rounded-full text-lg font-romantic transform transition-all duration-300 hover:bg-love-dark hover:scale-105 opacity-0 invisible" onclick="explodeHeart()">
+    <i class="fa fa-bomb mr-2"></i>绽放爱意
+  </button>
+  
+  <!-- 重置按钮 -->
+  <button id="resetBtn" class="mt-4 px-6 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-romantic transform transition-all duration-300 hover:bg-gray-300 hover:scale-105 opacity-0 invisible" onclick="resetAnimation()">
+    <i class="fa fa-refresh mr-1"></i>再来一次
+  </button>
+
+  <script>
+    // 文字内容 - 可以根据需要修改
+    const loveTexts = ['爱', '❤', 'LOVE', '恋', '💖', '喜欢', '💕', '思念', '💘', '牵挂'];
+    
+    // 鲜花图片集合
+    const flowerImages = [
+      'https://picsum.photos/id/152/100/100',
+      'https://picsum.photos/id/106/100/100',
+      'https://picsum.photos/id/118/100/100',
+      'https://picsum.photos/id/116/100/100',
+      'https://picsum.photos/id/132/100/100',
+      'https://picsum.photos/id/145/100/100',
+      'https://picsum.photos/id/152/100/100',
+      'https://picsum.photos/id/181/100/100'
+    ];
+    
+    // 心形参数
+    const heartParams = {
+      size: 200,       // 心形大小
+      points: 80,      // 点的数量
+      centerX: 0,      // 中心X坐标
+      centerY: 0,      // 中心Y坐标
+      textElements: [] // 文字元素数组
+    };
+    
+    // DOM元素
+    const heartContainer = document.getElementById('heartContainer');
+    const flowerContainer = document.getElementById('flowerContainer');
+    const explodeBtn = document.getElementById('explodeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const pageTitle = document.getElementById('pageTitle');
+    
+    // 初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 设置心形中心位置
+      heartParams.centerX = heartContainer.offsetWidth / 2;
+      heartParams.centerY = heartContainer.offsetHeight / 2;
+      
+      // 显示标题
+      setTimeout(() => {
+        pageTitle.classList.remove('opacity-0');
+      }, 500);
+      
+      // 创建心形文字
+      createHeartText();
+    });
+    
+    // 创建心形文字
+    function createHeartText() {
+      // 清空容器
+      heartContainer.innerHTML = '';
+      heartParams.textElements = [];
+      
+      // 生成心形上的点
+      for (let i = 0; i < heartParams.points; i++) {
+        // 角度从0到2π
+        const t = (i / heartParams.points) * Math.PI * 2;
+        
+        // 心形曲线参数方程
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        
+        // 计算实际位置并缩放
+        const posX = heartParams.centerX + x * (heartParams.size / 16);
+        const posY = heartParams.centerY - y * (heartParams.size / 16); // 负号是因为Y轴向下
+        
+        // 创建文字元素
+        const textEl = document.createElement('div');
+        const text = loveTexts[Math.floor(Math.random() * loveTexts.length)];
+        
+        // 随机样式
+        const fontSize = Math.random() * 12 + 14; // 14-26px
+        const colorIndex = Math.floor(Math.random() * 3);
+        const colors = ['text-love', 'text-love-dark', 'text-purple-500'];
+        
+        textEl.className = `absolute transition-all duration-1000 ease-out font-romantic ${colors[colorIndex]} text-shadow`;
+        textEl.style.fontSize = `${fontSize}px`;
+        textEl.style.left = `${posX}px`;
+        textEl.style.top = `${posY}px`;
+        textEl.style.transform = 'translate(-50%, -50%)';
+        textEl.style.opacity = '0';
+        textEl.textContent = text;
+        
+        heartContainer.appendChild(textEl);
+        heartParams.textElements.push({
+          element: textEl,
+          targetX: posX,
+          targetY: posY
+        });
+      }
+      
+      // 让文字"飘"到指定位置形成心形
+      animateTextIntoHeart();
+    }
+    
+    // 动画：文字飘入形成心形
+    function animateTextIntoHeart() {
+      const containerRect = heartContainer.getBoundingClientRect();
+      
+      heartParams.textElements.forEach((item, index) => {
+        // 随机起点（从容器边缘飘入）
+        const startPos = Math.random() * 4; // 0-3 代表四个方向
+        let startX, startY;
+        
+        switch (Math.floor(startPos)) {
+          case 0: // 顶部
+            startX = Math.random() * containerRect.width;
+            startY = -50;
+            break;
+          case 1: // 右侧
+            startX = containerRect.width + 50;
+            startY = Math.random() * containerRect.height;
+            break;
+          case 2: // 底部
+            startX = Math.random() * containerRect.width;
+            startY = containerRect.height + 50;
+            break;
+          case 3: // 左侧
+            startX = -50;
+            startY = Math.random() * containerRect.height;
+            break;
+        }
+        
+        // 设置初始位置
+        item.element.style.left = `${startX}px`;
+        item.element.style.top = `${startY}px`;
+        item.element.style.opacity = '0';
+        
+        // 延迟动画，创造依次飘入的效果
+        setTimeout(() => {
+          // 动画到目标位置
+          item.element.style.left = `${item.targetX}px`;
+          item.element.style.top = `${item.targetY}px`;
+          item.element.style.opacity = '1';
+          
+          // 最后一个元素到位后显示爆炸按钮
+          if (index === heartParams.textElements.length - 1) {
+            setTimeout(() => {
+              explodeBtn.classList.remove('opacity-0', 'invisible');
+              explodeBtn.classList.add('opacity-100', 'visible');
+            }, 1000);
+          }
+        }, index * 50 + 500); // 错开时间
+      });
+    }
+    
+    // 爆炸效果：心形变成满屏鲜花
+    function explodeHeart() {
+      // 隐藏爆炸按钮
+      explodeBtn.classList.add('opacity-0');
+      setTimeout(() => {
+        explodeBtn.classList.add('invisible');
+      }, 300);
+      
+      // 文字元素爆炸消失
+      heartParams.textElements.forEach((item, index) => {
+        setTimeout(() => {
+          // 随机方向的爆炸效果
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * 300 + 100;
+          const explodeX = Math.cos(angle) * distance;
+          const explodeY = Math.sin(angle) * distance;
+          
+          item.element.style.transform = `translate(-50%, -50%) translate(${explodeX}px, ${explodeY}px)`;
+          item.element.style.opacity = '0';
+          item.element.style.transition = 'all 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67)';
+          
+          // 创建对应的鲜花
+          createFlower(item.targetX, item.targetY, angle, distance);
+        }, index * 30); // 错开爆炸时间
+      });
+      
+      // 显示重置按钮
+      setTimeout(() => {
+        resetBtn.classList.remove('opacity-0', 'invisible');
+        resetBtn.classList.add('opacity-100', 'visible');
+      }, 1500);
+    }
+    
+    // 创建鲜花元素
+    function createFlower(x, y, angle, distance) {
+      const flower = document.createElement('div');
+      flower.className = 'petal';
+      
+      // 随机选择鲜花图片
+      const imgSrc = flowerImages[Math.floor(Math.random() * flowerImages.length)];
+      flower.style.backgroundImage = `url(${imgSrc})`;
+      
+      // 随机大小
+      const size = Math.random() * 40 + 30; // 30-70px
+      flower.style.width = `${size}px`;
+      flower.style.height = `${size}px`;
+      
+      // 位置设置（与文字相同的起点）
+      flower.style.left = `${x}px`;
+      flower.style.top = `${y}px`;
+      flower.style.transform = 'translate(-50%, -50%)';
+      
+      flowerContainer.appendChild(flower);
+      
+      // 鲜花爆炸动画
+      setTimeout(() => {
+        flower.style.opacity = '1';
+        flower.style.transform = `translate(-50%, -50%) translate(${Math.cos(angle) * distance * 0.8}px, ${Math.sin(angle) * distance * 0.8}px) rotate(${Math.random() * 360}deg)`;
+        flower.style.transition = `all 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28)`;
+        
+        // 轻微浮动效果
+        setTimeout(() => {
+          flower.classList.add('float-animation');
+        }, 1200);
+      }, 50);
+    }
+    
+    // 重置动画
+    function resetAnimation() {
+      // 隐藏重置按钮
+      resetBtn.classList.add('opacity-0');
+      setTimeout(() => {
+        resetBtn.classList.add('invisible');
+      }, 300);
+      
+      // 清除鲜花
+      flowerContainer.innerHTML = '';
+      
+      // 重新创建心形文字
+      setTimeout(() => {
+        createHeartText();
+      }, 500);
+    }
+  </script>
+</body>
+</html>
